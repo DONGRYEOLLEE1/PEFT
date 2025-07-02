@@ -14,7 +14,7 @@ class MHA(nn.Module):
         self.k_proj = nn.Linear(d_model, d_model)
         self.v_proj = nn.Linear(d_model, d_model)
         self.o_proj = nn.Linear(d_model, d_model)
-        self.dropoput = nn.Dropout(dropout)
+        self.dropout = nn.Dropout(dropout)
         
     def forward(self, q, k, v, mask = None):
         batch_size = q.size(0)
@@ -39,7 +39,7 @@ class MHA(nn.Module):
         out = torch.matmul(attn, v)     # bacth, num_heads, seq_len, d_k
         
         # 3. Concat heads
-        out = out.transpose(1, 2).contiguous().view(batch_size, -1, self._num_heads * self.d_k)
+        out = out.transpose(1, 2).contiguous().view(batch_size, -1, self.num_heads * self.d_k)
         out = self.o_proj(out)
         
         return out
