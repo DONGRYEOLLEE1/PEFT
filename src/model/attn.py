@@ -1,0 +1,45 @@
+import math
+
+import torch
+import torch.nn as nn
+
+
+class MHA(nn.Module):
+    def __init__(self, d_model, num_heads, dropout = .1):
+        super().__init__()
+        assert d_model % num_heads == 0
+        self.d_k = d_model // num_heads
+        self.num_heads = num_heads
+        self.q_proj = nn.Linear(d_model, d_model)
+        self.k_proj = nn.Linear(d_model, d_model)
+        self.v_proj = nn.Linear(d_model, d_model)
+        self.o_proj = nn.Linear(d_model, d_model)
+        self.dropoput = nn.Dropout(dropout)
+        
+    def forward(self, q, k, v, mask = None):
+        batch_size = q.size(0)
+        
+        # 1. Linear projections & split by heads
+        def transform(x, linear):
+            x = linear(x)
+            x = x.view(batch_size, -1, self.num_heads, self.d_k)
+            return x.transpose(1, 2)
+        
+        q = transform(q, self.q_proj)
+        k = transform(k, self.k_proj)
+        v = transform(v, self.v_proj)
+        
+        # 2. Scaled dot-product attn
+        scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(self.d_k)
+        if mask is not None:
+            scores = scores.masked_fill(mask == 0, -1e3)
+            
+        attn = torch.softmax(scores, dim = -1)
+        attn = self.dropout(attn)
+        out = torch.matmul(attn, v)     # bacth, num_heads, seq_len, d_k
+        
+        # 3. Concat heads
+        out = out.transpose(1, 2).contiguous().view(batch_size, -1, self._num_heads * self.d_k)
+        out = self.o_proj(out)
+        
+        return out
