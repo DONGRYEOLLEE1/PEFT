@@ -5,7 +5,7 @@ import torch.nn as nn
 
 
 class MHA(nn.Module):
-    def __init__(self, d_model, num_heads, dropout = .1):
+    def __init__(self, d_model, num_heads, dropout=.1):
         super().__init__()
         assert d_model % num_heads == 0, f'{d_model} % {num_heads} != 0'
         self.d_k = d_model // num_heads
@@ -17,7 +17,7 @@ class MHA(nn.Module):
         self.o_proj = nn.Linear(d_model, d_model)
         self.dropout = nn.Dropout(dropout)
         
-    def forward(self, q, k, v, mask = None):
+    def forward(self, q, k, v, mask=None):
         batch_size = q.size(0)
         
         # 1. Linear projections & split by heads
@@ -35,7 +35,7 @@ class MHA(nn.Module):
         if mask is not None:
             scores = scores.masked_fill(mask == 0, -1e3)
             
-        attn = torch.softmax(scores, dim = -1)
+        attn = torch.softmax(scores, dim=-1)
         attn = self.dropout(attn)
         out = torch.matmul(attn, v)     # bacth, num_heads, seq_len, d_k
         
