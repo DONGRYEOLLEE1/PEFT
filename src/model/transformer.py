@@ -17,6 +17,9 @@ class Transformer(nn.Module):
         max_len = 5000
     ):
         super().__init__()
+        self.src_vocab_size = src_vocab_size
+        self.tgt_vocab_size = tgt_vocab_size
+        
         self.encoder = Encoder(
             src_vocab_size,
             d_model,

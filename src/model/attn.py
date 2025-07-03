@@ -7,8 +7,9 @@ import torch.nn as nn
 class MHA(nn.Module):
     def __init__(self, d_model, num_heads, dropout = .1):
         super().__init__()
-        assert d_model % num_heads == 0
+        assert d_model % num_heads == 0, f'{d_model} % {num_heads} != 0'
         self.d_k = d_model // num_heads
+        self.d_model = d_model
         self.num_heads = num_heads
         self.q_proj = nn.Linear(d_model, d_model)
         self.k_proj = nn.Linear(d_model, d_model)
