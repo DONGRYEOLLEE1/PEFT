@@ -65,3 +65,6 @@ def test_mha_backward(mha_factory):
     assert not torch.isnan(x.grad).any()
     assert not torch.isinf(x.grad).any()
     assert torch.all(x.grad != 0)
+    
+def test_rope_():
+    ...
