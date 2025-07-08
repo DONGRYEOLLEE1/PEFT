@@ -3,7 +3,7 @@ import torch.nn as nn
 
 from .attn import MHA
 from .ffn import FFN
-from .pe import PositionalEncoding
+from .positional_encodings import PositionalEncoding
 
 
 

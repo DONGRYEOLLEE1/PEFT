@@ -4,7 +4,7 @@ import torch.nn as nn
 
 from typing import Optional, Literal
 
-from rope import RoPE, NTKScalingRotaryEmbedding
+from .positional_encodings import RotaryEmbedding, NTKScalingRotaryEmbedding, YaRNRotaryEmbedding
 
 
 class MHA(nn.Module):
@@ -13,7 +13,7 @@ class MHA(nn.Module):
         d_model: int,
         num_heads: int,
         dropout: float = 0.1,
-        rope: Optional[Literal["rope", "ntkscalingrope"]] = None,
+        rope_type: Optional[Literal["rope", "ntk_rope", "yarn"]] = None,
         rope_dim: Optional[int] = None, 
         rope_base: Optional[int] = 10000,
         scaling_factor: Optional[float] = 1.0,
@@ -30,32 +30,37 @@ class MHA(nn.Module):
         self.dropout = nn.Dropout(dropout)
         
         # RoPE 초기화
-        if rope == "rope":
+        if rope_type == "rope":
             self.rope = RoPE(dim = rope_dim, base = rope_base)
-        elif rope == "ntkscalingrope":
+        elif rope_type == "ntk_rope":
             self.rope = NTKScalingRotaryEmbedding(dim = rope_dim, base = rope_base, scaling_factor = scaling_factor)
+        elif rope_type == "yarn":
+            ...
         else:
             self.rope = None
         
+    def _transform(self, batch_size, x, linear):
+        x = linear(x)
+        x = x.view(batch_size, -1, self.num_heads, self.d_k)
+        
+        return x.transpose(1, 2).contiguous()
+        
     def forward(self, q, k, v, mask=None):
-        batch_size = q.size(0)
+        # batch_size = q.size(0)
+        batch_size, seq_len, _ = q.size()
         
         # 1. Linear projections & split by heads
-        def transform(x, linear):
-            x = linear(x)
-            x = x.view(batch_size, -1, self.num_heads, self.d_k)
-            return x.transpose(1, 2)
-        
-        q = transform(q, self.q_proj)
-        k = transform(k, self.k_proj)
-        v = transform(v, self.v_proj)
+        q = self._transform(batch_size, q, self.q_proj)
+        k = self._transform(batch_size, k, self.k_proj)
+        v = self._transform(batch_size, v, self.v_proj)
         
         # 2. Apply RoPE if provided
         if self.rope is not None:
             # RoPE는 각 헤드에 대해 적용되어야 함
-            seq_len = q.size(2)
-            q_reshaped = q.view(batch_size * self.num_heads, seq_len, self.d_k)
-            k_reshaped = k.view(batch_size * self.num_heads, seq_len, self.d_k)
+            # seq_len = q.size(2)
+            
+            q_reshaped = q.reshape(batch_size * self.num_heads, seq_len, self.d_k)
+            k_reshaped = k.reshape(batch_size * self.num_heads, seq_len, self.d_k)
             
             q = self.rope(q_reshaped, seq_len).view(batch_size, self.num_heads, seq_len, self.d_k)
             k = self.rope(k_reshaped, seq_len).view(batch_size, self.num_heads, seq_len, self.d_k)
