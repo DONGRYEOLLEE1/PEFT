@@ -23,10 +23,10 @@ class MHA(nn.Module):
         self.d_k = d_model // num_heads
         self.d_model = d_model
         self.num_heads = num_heads
-        self.q_proj = nn.Linear(d_model, d_model)
-        self.k_proj = nn.Linear(d_model, d_model)
-        self.v_proj = nn.Linear(d_model, d_model)
-        self.o_proj = nn.Linear(d_model, d_model)
+        self.q_proj = nn.Linear(d_model, d_model, bias = False)
+        self.k_proj = nn.Linear(d_model, d_model, bias = False)
+        self.v_proj = nn.Linear(d_model, d_model, bias = False)
+        self.o_proj = nn.Linear(d_model, d_model, bias = False)
         self.dropout = nn.Dropout(dropout)
         
         # RoPE 초기화

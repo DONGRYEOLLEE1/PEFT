@@ -146,30 +146,6 @@ class YaRNRotaryEmbedding(nn.Module):
         )
         return mask
     
-    def _get_yanr_linear_rmap_mask(self, min_val, max_val, dim):
-        """
-        YaRN의 선형 램프 마스크 생성
-        주파수 범위에 따라 점진적으로 스케일링 적용
-        """
-        if min_val == max_val:
-            return torch.ones(dim // 2)
-        
-        # 0부터 1까지의 선형 램프 생성
-        ramp = torch.linspace(0,1, dim // 2)
-        
-        # min_val과 max_val 사이에서 선형 보간
-        mask = torch.where(
-            ramp < min_val,
-            torch.zeros_like(ramp),
-            torch.where(
-                ramp > max_val,
-                torch.ones_like(ramp),
-                (ramp - min_val) / (max_val - min_val)
-            )
-        )
-        
-        return mask
-    
     def forward(self, x, seq_len = None):
         """
         Args:
@@ -198,9 +174,6 @@ class YaRNRotaryEmbedding(nn.Module):
             
             # YaRN 마스크 생성: 주파수에 따라 다른 스케일링 적용
             # 고주파수 영역: 외삽, 중간 주파수영역: 점진적전환, 저주파수 영역: 내삽
-            # yarn_ramp_mask = self._get_yanr_linear_rmap_mask(
-            #     low_freq_wavelen, high_freq_wavelen, self.dim
-            # ).to(x.device)
             
             yarn_ramp_mask = self._get_yarn_linear_ramp_mask_from_wavelens(
                 wavelens, low_freq_wavelen, high_freq_wavelen
