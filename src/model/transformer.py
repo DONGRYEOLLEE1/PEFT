@@ -38,7 +38,7 @@ class Transformer(nn.Module):
             dropout,
             max_len
         )
-        self.out = nn.Linear(d_model, tgt_vocab_size)
+        self.out = nn.Linear(d_model, tgt_vocab_size, bias = False)
         
     def forward(self, src, tgt, src_mask = None, tgt_mask = None):
         memory = self.encoder(src, src_mask)

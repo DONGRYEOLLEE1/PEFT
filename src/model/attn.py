@@ -7,7 +7,7 @@ from typing import Optional, Literal
 from .positional_encodings import RotaryEmbedding, NTKScalingRotaryEmbedding, YaRNRotaryEmbedding
 
 
-class MHA(nn.Module):
+class Attention(nn.Module):
     def __init__(
         self, 
         d_model: int,
@@ -31,11 +31,11 @@ class MHA(nn.Module):
         
         # RoPE 초기화
         if rope_type == "rope":
-            self.rope = RoPE(dim = rope_dim, base = rope_base)
+            self.rope = RotaryEmbedding(dim = rope_dim, base = rope_base)
         elif rope_type == "ntk_rope":
             self.rope = NTKScalingRotaryEmbedding(dim = rope_dim, base = rope_base, scaling_factor = scaling_factor)
         elif rope_type == "yarn":
-            ...
+            self.rope = YaRNRotaryEmbedding(dim = rope_dim, base = rope_base, scaling_factor = scaling_factor,)
         else:
             self.rope = None
         

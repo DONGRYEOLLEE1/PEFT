@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from .attn import MHA
+from .attn import Attention
 from .ffn import FFN
 from .positional_encodings import PositionalEncoding
 
@@ -9,8 +9,8 @@ from .positional_encodings import PositionalEncoding
 class DecoderLayer(nn.Module):
     def __init__(self, d_model, num_heads, d_ff, dropout = .1):
         super().__init__()
-        self.attn = MHA(d_model, num_heads, dropout)
-        self.cross_attn = MHA(d_model, num_heads, dropout)
+        self.attn = Attention(d_model, num_heads, dropout)
+        self.cross_attn = Attention(d_model, num_heads, dropout)
         self.ffn = FFN(d_model, d_ff, dropout)
         self.norm1 = nn.LayerNorm(d_model)
         self.norm2 = nn.LayerNorm(d_model)

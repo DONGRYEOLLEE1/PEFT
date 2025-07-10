@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from .attn import MHA
+from .attn import Attention
 from .ffn import FFN
 from .positional_encodings import PositionalEncoding
 
@@ -11,7 +11,7 @@ class EncoderLayer(nn.Module):
     def __init__(self, d_model, num_heads, d_ff, dropout = .1):
         super().__init__()
         
-        self.mha = MHA(d_model, num_heads, dropout)
+        self.mha = Attention(d_model, num_heads, dropout)
         self.ffn = FFN(d_model, d_ff, dropout)
         self.norm1 = nn.LayerNorm(d_model)
         self.norm2 = nn.LayerNorm(d_model)
